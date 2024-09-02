@@ -1,0 +1,25 @@
+section[data-testid="stSidebar"] {
+    width: 600px !important;
+    padding-top: 0 !important;
+}
+
+div[data-testid="stSidebarHeader"] {
+    padding-top: 0 !important;
+}
+
+textarea { 
+    min-height: 330px !important;
+    height: 350px !important;
+}
+
+.st-emotion-cache-1mi2ry5 {
+    padding: 0rem 0rem 0rem !important;
+}
+
+.st-emotion-cache-13ln4jf {
+    padding: 1rem 1rem 10rem !important;
+}
+
+.st-emotion-cache-1gwvy71 {
+    padding: 0px 1.5rem 2rem !important;
+}
