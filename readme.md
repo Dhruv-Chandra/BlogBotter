@@ -1,13 +1,15 @@
-<h1>Blog Botter</h1>
-
-<h3><b>Home Page:</b></h3>
-<img title="HomePage" alt="HomePage" src="./images/HomePage.png">
 <style>
 img {width:1000px;}
 p, li {font-size: 20px;}
 h3 {font-size: 27px;}
 h4 {font-size: 24px;}
 </style>
+
+<h1>Blog Botter</h1>
+
+<h3><b>Home Page:</b></h3>
+<img title="HomePage" alt="HomePage" src="./images/HomePage.png">
+
 <h3><b>Model Selection Capability:</b></h3>
 <h4>Options:</h4>
 <ul>
