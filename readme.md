@@ -1,9 +1,9 @@
-<style>
+<!-- <style>
 img {width:1000px;}
 p, li {font-size: 20px;}
 h3 {font-size: 27px;}
 h4 {font-size: 24px;}
-</style>
+</style> -->
 
 <h1>Blog Botter</h1>
 
