@@ -7,8 +7,8 @@ def rewrite_content(selection, prompt):
 
     config_data = json.load(open("config.json"))
 
-    model = config_data[selection]["model_name"]
-    api = config_data[selection]["api"]
+    model = config_data["models"][selection]["model_name"]
+    api = config_data["models"][selection]["api"]
 
     # print(model)
     # print(api)

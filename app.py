@@ -1,19 +1,17 @@
-'''
-Things to try:
-    Combine two functions in extract content to reduce looping. - Not Effective
-    Try to enable buttons after refresh. - Done
-    Find a way to calculate seo score manually.
-'''
-
-import warnings, json, time
+import warnings, json, string
 
 warnings.filterwarnings("ignore")
 from modules.Extract_Content import get_most_common_keywords
 import streamlit as st
 from modules.Generate_Response import generate_response
 from googlesearch import search
-# from modules.Export_PDF import export_pdf
-from modules.Export import export
+
+from wordpress_xmlrpc import WordPressPost, Client
+from wordpress_xmlrpc.methods import posts
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+
+lemmatizer = WordNetLemmatizer()
 
 st.set_page_config(page_title="BlogBotter 💬 ", initial_sidebar_state="auto")
 
@@ -22,7 +20,8 @@ with open("css/style.css") as f:
 
 st.title("BlogBotter 💬 ")
 
-models = json.load(open("config.json"))
+config_data = json.load(open("config.json"))
+models = config_data["models"]
 keywords = []
 
 
@@ -48,6 +47,50 @@ def clear():
     st.session_state.result = None
 
 
+def get_tags_categories(title):
+    title_for_tags = title.translate(str.maketrans("", "", string.punctuation))
+
+    list_title_for_tags = title_for_tags.split()
+    list_title_for_tags.extend([title_for_tags])
+
+    tags = []
+    stop_words = set(stopwords.words("english"))
+
+    for word in list_title_for_tags:
+        if word not in stop_words and len(word) > 1:
+            tags.append(word)
+            tags.append(lemmatizer.lemmatize(word))
+
+    return tags, [title_for_tags]
+
+
+def wordpress(action):
+    wp_url = config_data["wordpress"]["wordpress_url"]
+    wp_username = config_data["wordpress"]["wordpress_username"]
+    wp_password = config_data["wordpress"]["wordpress_password"]
+
+    client = Client(wp_url, wp_username, wp_password)
+
+    # clean_title = title.replace(":", "-")
+    tags, categories = get_tags_categories(title)
+
+    post = WordPressPost()
+    post.title, post.content = st.session_state.result.split("\n\n", 1)
+
+    post.id = client.call(posts.NewPost(post))
+
+    post.terms_names = {
+        "post_tag": tags,
+        "category": categories,
+    }
+
+    post.post_status = action
+    try:
+        client.call(posts.EditPost(post.id, post))
+    except:
+        wordpress()
+    clear()
+
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -62,11 +105,17 @@ for message in st.session_state.messages:
 with st.sidebar:
     st.markdown("# Chat Options")
 
-    selection = st.selectbox("What model would you like to use?", (models.keys()), on_change=clear)
+    selection = st.selectbox(
+        "What model would you like to use?", models.keys(), on_change=clear
+    )
 
-    title = st.text_input("Enter Title: ", placeholder="Title of the Blog goes here.", on_change=clear)
+    title = st.text_input(
+        "Enter Title: ", placeholder="Title of the Blog goes here.", on_change=clear
+    )
 
-    blog = st.text_area("Enter Blog: ", placeholder="Your Original Blog goes here.", on_change=clear)
+    blog = st.text_area(
+        "Enter Blog: ", placeholder="Your Original Blog goes here.", on_change=clear
+    )
 
     imp_lock = (
         st.session_state.imp_run
@@ -101,17 +150,19 @@ with st.sidebar:
         )
 
 if st.session_state.gen_run or st.session_state.imp_run:
-    t1 = time.time()
+
+    with open("./Sample.html", "r") as sample:
+        format = sample.read()
 
     if st.session_state.imp_run:
         promptVisible = f"Improving the SEO of the following blog: {title}"
         promptInVisible = f"""
-        Improve SEO of the blog: "{blog}" and write an imporved blog focusing mainly on the keywords:
+        Improve SEO of the blog: "{blog}" and write an imporved blog in the format: {format}
         """
     else:
         promptVisible = f"Writing a blog on the following topic: {title}"
         promptInVisible = f"""
-        Write a blog on {title} focusing mainly on the keywords:
+        Write a blog on {title} in the format: {format}
         """
 
     st.session_state.messages.append({"role": "user", "content": promptVisible})
@@ -119,19 +170,13 @@ if st.session_state.gen_run or st.session_state.imp_run:
     with st.chat_message("user", avatar="🧑‍💻"):
         st.markdown(promptVisible)
 
-    t2 = time.time()
-    print("Part 1:", t2-t1)
-
     with st.spinner("Generating response..."):
         urls = []
         for j in search(title, tld="co.in", num=5, stop=5, pause=2):
             urls.append(j)
         keywords = get_most_common_keywords(urls)
-        
-        t3 = time.time()
-        print("Part 2:", t3-t1)
 
-        print(promptInVisible + str(keywords))
+        # print(promptInVisible + str(keywords))
 
         if st.session_state.imp_run:
             st.session_state.result = generate_response(
@@ -144,31 +189,22 @@ if st.session_state.gen_run or st.session_state.imp_run:
                 selection, promptInVisible + str(keywords)
             )
             st.session_state.gen_run = False
-        
-        t3 = time.time()
-        print("Part 3:", t3-t1)
 
         if st.session_state.result is not None:
-            c3, c4 = st.columns(2)
+            c3, c4, c5 = st.columns(3)
             with c3:
                 st.button("Clear", on_click=clear, use_container_width=True)
 
             with c4:
-                # Export to PDF
-                # st.download_button(
-                #     label="Export",
-                #     data=export_pdf(title, st.session_state.result),
-                #     file_name="ImprovedContent.pdf",
-                #     mime="application/octet-stream",
-                #     use_container_width=True,
-                #     on_click=clear,
-                # )
-
-                # Export to HTML
-                st.download_button(
-                    label="Export",
-                    data=export(title, st.session_state.result),
-                    file_name=f"{title}.html",
+                action = "draft"
+                st.button(
+                    "Add Draft to WordPress",
+                    on_click=wordpress,
+                    args=(action,),
                     use_container_width=True,
-                    on_click=clear,
+                )
+            with c5:
+                action = "publish"
+                st.button(
+                    "Publish to WordPress", on_click=wordpress, args=(action,), use_container_width=True
                 )
