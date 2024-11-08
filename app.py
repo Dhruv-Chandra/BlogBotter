@@ -196,15 +196,13 @@ if st.session_state.gen_run or st.session_state.imp_run:
                 st.button("Clear", on_click=clear, use_container_width=True)
 
             with c4:
-                action = "draft"
                 st.button(
                     "Add Draft to WordPress",
                     on_click=wordpress,
-                    args=(action,),
+                    args=("draft",),
                     use_container_width=True,
                 )
             with c5:
-                action = "publish"
                 st.button(
-                    "Publish to WordPress", on_click=wordpress, args=(action,), use_container_width=True
+                    "Publish to WordPress", on_click=wordpress, args=("publish",), use_container_width=True
                 )
