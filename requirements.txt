@@ -10,7 +10,6 @@ apify_client==1.8.1
 apify_shared==1.1.2
 APScheduler==3.10.4
 asn1crypto==1.5.1
-aspose-words==24.6.0
 asttokens==2.4.1
 astunparse==1.6.3
 attrs==23.2.0
@@ -302,3 +301,5 @@ yarl==1.9.4
 zipp==3.19.2
 zope.event==5.0
 zope.interface==6.4.post2
+wordpress_xmlrpc
+nltk
