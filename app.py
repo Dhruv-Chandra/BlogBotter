@@ -70,16 +70,14 @@ def get_tags_categories(title):
 
 
 def wordpress(action):
-    with open("./Sample.html", "r") as sample:
-        format = sample.read()
-
     prompt = f'''
     reformat this blog: {st.session_state.result} adding headings between "strong" tags, list items between relevant list tags,
     code instances between <code> tags with the code properly formatted and also allowing the user to copy the code using a 
     button in the top right and images between <img> tags, also choose other tags appropriately.
     '''
+    
     result_to_wordpress = generate_response(selection, promptInVisible=prompt)
-    print(result_to_wordpress)
+    # print(result_to_wordpress)
 
     wp_url = config_data["wordpress"]["wordpress_url"]
     wp_username = config_data["wordpress"]["wordpress_username"]
