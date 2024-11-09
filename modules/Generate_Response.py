@@ -7,8 +7,9 @@ import streamlit as st
 
 # @st.cache_data
 def generate_response(selection, promptInVisible):
+    config_data = st.secrets
 
-    if json.load(open("config.json"))["models"][selection]["api"] != "":
+    if config_data["models"][selection]["api"] != "":
         llm_response = rewrite_content(selection, promptInVisible)
     else:
         with st.chat_message("assistant", avatar="🤖"):

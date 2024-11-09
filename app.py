@@ -1,13 +1,18 @@
-import warnings, json, string
+from nltk.stem import WordNetLemmatizer
+from nltk.corpus import stopwords
+import nltk
+from wordpress_xmlrpc.methods import posts
+from wordpress_xmlrpc import WordPressPost, Client
+from modules.Generate_Response import generate_response
+import streamlit as st
+import warnings
+import json
+import string
 
 warnings.filterwarnings("ignore")
-import streamlit as st
-from modules.Generate_Response import generate_response
 
-from wordpress_xmlrpc import WordPressPost, Client
-from wordpress_xmlrpc.methods import posts
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
+nltk.download('stopwords')
+nltk.download('wordnet')
 
 lemmatizer = WordNetLemmatizer()
 
@@ -21,7 +26,6 @@ st.title("BlogBotter 💬 ")
 # config_data = json.load(open("config.json"))
 # config_data = toml.load('.streamlit/secrets.toml')
 config_data = st.secrets
-print(config_data)
 models = config_data["models"]
 keywords = []
 
@@ -66,6 +70,17 @@ def get_tags_categories(title):
 
 
 def wordpress(action):
+    with open("./Sample.html", "r") as sample:
+        format = sample.read()
+
+    prompt = f'''
+    reformat this blog: {st.session_state.result} adding headings between "strong" tags, list items between relevant list tags,
+    code instances between <code> tags with the code properly formatted and also allowing the user to copy the code using a 
+    button in the top right and images between <img> tags, also choose other tags appropriately.
+    '''
+    result_to_wordpress = generate_response(selection, promptInVisible=prompt)
+    print(result_to_wordpress)
+
     wp_url = config_data["wordpress"]["wordpress_url"]
     wp_username = config_data["wordpress"]["wordpress_username"]
     wp_password = config_data["wordpress"]["wordpress_password"]
@@ -75,7 +90,7 @@ def wordpress(action):
     tags, categories = get_tags_categories(title)
 
     post = WordPressPost()
-    post.title, post.content = st.session_state.result.split("\n\n", 1)
+    post.title, post.content = result_to_wordpress.split("\n\n", 1)
 
     post.id = client.call(posts.NewPost(post))
 
@@ -151,21 +166,19 @@ with st.sidebar:
 
 if st.session_state.gen_run or st.session_state.imp_run:
 
-    with open("./Sample.html", "r") as sample:
-        format = sample.read()
-
     if st.session_state.imp_run:
         promptVisible = f"Improving the SEO of the following blog: {title}"
         promptInVisible = f"""
-        Improve SEO of the blog: "{blog}" and write an imporved blog in the format: {format}
+        Improve SEO of the blog: "{blog}".
         """
     else:
         promptVisible = f"Writing a blog on the following topic: {title}"
         promptInVisible = f"""
-        Write a in-depth blog on {title} citing some coding examples of R or Python in the format: {format}
+        Write a in-depth blog on {title} citing some coding examples of R or Python as code snippets.
         """
 
-    st.session_state.messages.append({"role": "user", "content": promptVisible})
+    st.session_state.messages.append(
+        {"role": "user", "content": promptVisible})
 
     with st.chat_message("user", avatar="🧑‍💻"):
         st.markdown(promptVisible)

@@ -12,23 +12,20 @@ def rewrite_content(selection, prompt):
     model = config_data["models"][selection]["model_name"]
     api = config_data["models"][selection]["api"]
 
-    # print(model)
-    # print(api)
-
     if (selection.lower() == "gpt-4") or (selection.lower() == "llama"):
         return rewrite_content_gpt(model, api, prompt)
-    elif selection.lower() == "gemini":
-        return rewrite_content_gemini(model, api, prompt)
+    # elif selection.lower() == "gemini":
+    #     return rewrite_content_gemini(model, api, prompt)
 
 # @st.cache_data
-def rewrite_content_gemini(model, api, prompt):
+# def rewrite_content_gemini(model, api, prompt):
 
-    genai.configure(api_key=api)
+#     genai.configure(api_key=api)
 
-    model = genai.GenerativeModel(model)
-    response = model.generate_content(prompt)
+#     model = genai.GenerativeModel(model)
+#     response = model.generate_content(prompt)
 
-    return response.text
+#     return response.text
 
 # @st.cache_data
 def rewrite_content_gpt(model, api, prompt):
