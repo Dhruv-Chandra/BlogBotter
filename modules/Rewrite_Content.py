@@ -1,11 +1,13 @@
 # import google.generativeai as genai
 import json
+import streamlit as st
 from openai import OpenAI
 
 # @st.cache_data
 def rewrite_content(selection, prompt):
 
-    config_data = json.load(open("config.json"))
+    # config_data = json.load(open("config.json"))
+    config_data = st.secrets
 
     model = config_data["models"][selection]["model_name"]
     api = config_data["models"][selection]["api"]
