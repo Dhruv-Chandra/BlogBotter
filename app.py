@@ -200,13 +200,12 @@ if st.session_state.gen_run or st.session_state.imp_run:
     with st.spinner("Generating response..."):
 
         if st.session_state.imp_run:
-            # st.session_state.result = generate_response(selection, promptInVisible)
+            st.session_state.result = generate_response(selection, promptInVisible)
             st.session_state.imp_run = False
 
         if st.session_state.gen_run:
-            # st.session_state.result = generate_response(selection, promptInVisible)
+            st.session_state.result = generate_response(selection, promptInVisible)
             st.session_state.gen_run = False
-        st.session_state.result = 'result'
 
         if st.session_state.result is not None:
             c3, c4, c5 = st.columns(3)
