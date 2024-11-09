@@ -72,7 +72,7 @@ def wordpress(action):
     code instances exist then add them between "code" tags with the code properly formatted.
     """
 
-    result_to_wordpress = generate_response(selection, promptInVisible=prompt)
+    result_to_wordpress = generate_response(selection, promptInVisible=prompt, to_add_in_chat=False)
 
     wp_url = config_data["wordpress"]["wordpress_url"]
     wp_username = config_data["wordpress"]["wordpress_username"]

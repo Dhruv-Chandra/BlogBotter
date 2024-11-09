@@ -6,7 +6,7 @@ import streamlit as st
 # @jit
 
 # @st.cache_data
-def generate_response(selection, promptInVisible):
+def generate_response(selection, promptInVisible, to_add_in_chat = True):
     config_data = st.secrets
 
     if config_data["models"][selection]["api"] != "":
@@ -15,8 +15,9 @@ def generate_response(selection, promptInVisible):
         with st.chat_message("assistant", avatar="🤖"):
             st.markdown("Choose a different Model.")
 
-    with st.chat_message("assistant", avatar="🤖"):
-        st.markdown(llm_response)
+    if to_add_in_chat:
+        with st.chat_message("assistant", avatar="🤖"):
+            st.markdown(llm_response)
 
     st.session_state.messages.append({"role": "assistant", "content": llm_response})
 
