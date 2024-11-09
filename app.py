@@ -71,7 +71,7 @@ def get_tags_categories(title):
 
 def wordpress(action):
     prompt = f'''
-    reformat this blog: {st.session_state.result} adding headings between "strong" tags, list items between relevant list tags,
+    reformat this blog: {st.session_state.result} make headings bold, list items between relevant list tags,
     code instances between <code> tags with the code properly formatted and also allowing the user to copy the code using a 
     button in the top right and images between <img> tags, also choose other tags appropriately.
     '''
@@ -127,6 +127,18 @@ with st.sidebar:
         "Enter Title: ", placeholder="Title of the Blog goes here.", on_change=clear
     )
 
+    c6, c7 = st.columns(2)
+
+    with c6:
+        language = st.selectbox(
+            "Language for Code examples?", ['Python', 'R']
+        )
+
+    with c7:
+        depth = st.selectbox(
+            "Depth?", ['General', 'In-Depth']
+        )
+
     blog = st.text_area(
         "Enter Blog: ", placeholder="Your Original Blog goes here.", on_change=clear
     )
@@ -172,7 +184,7 @@ if st.session_state.gen_run or st.session_state.imp_run:
     else:
         promptVisible = f"Writing a blog on the following topic: {title}"
         promptInVisible = f"""
-        Write a in-depth blog on {title} citing some coding examples of R or Python as code snippets.
+        Write a {depth} blog on {title} citing some coding examples of {language} as code snippets.
         """
 
     st.session_state.messages.append(
