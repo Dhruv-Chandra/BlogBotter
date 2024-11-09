@@ -6,13 +6,12 @@ from wordpress_xmlrpc import WordPressPost, Client
 from modules.Generate_Response import generate_response
 import streamlit as st
 import warnings
-import json
-import string
+import json, os, string
 
 warnings.filterwarnings("ignore")
 
-nltk.download('stopwords')
-nltk.download('wordnet')
+nltk.download("stopwords")
+nltk.download("wordnet")
 
 lemmatizer = WordNetLemmatizer()
 
@@ -23,8 +22,6 @@ with open("css/style.css") as f:
 
 st.title("BlogBotter 💬 ")
 
-# config_data = json.load(open("config.json"))
-# config_data = toml.load('.streamlit/secrets.toml')
 config_data = st.secrets
 models = config_data["models"]
 keywords = []
@@ -70,14 +67,13 @@ def get_tags_categories(title):
 
 
 def wordpress(action):
-    prompt = f'''
-    reformat this blog: {st.session_state.result} make headings bold, list items between relevant list tags,
-    code instances between <code> tags with the code properly formatted and also allowing the user to copy the code using a 
-    button in the top right and images between <img> tags, also choose other tags appropriately.
-    '''
-    
+    prompt = f"""
+    reformat this blog: {st.session_state.result} make headings bold, list items between relevant list tags, if
+    code instances exist then add them between <code> tags with the code properly formatted and also allowing the user to copy the code using a 
+    button in the top right also choose other tags appropriately.
+    """
+
     result_to_wordpress = generate_response(selection, promptInVisible=prompt)
-    # print(result_to_wordpress)
 
     wp_url = config_data["wordpress"]["wordpress_url"]
     wp_username = config_data["wordpress"]["wordpress_username"]
@@ -128,16 +124,13 @@ with st.sidebar:
     )
 
     c6, c7 = st.columns(2)
+    language = None
 
     with c6:
-        language = st.selectbox(
-            "Language for Code examples?", ['Python', 'R']
-        )
+        language = st.selectbox("Language for Code examples?", ["", "Python", "R"])
 
     with c7:
-        depth = st.selectbox(
-            "Depth?", ['General', 'In-Depth']
-        )
+        depth = st.selectbox("Depth?", ["General", "In-Depth"])
 
     blog = st.text_area(
         "Enter Blog: ", placeholder="Your Original Blog goes here.", on_change=clear
@@ -175,20 +168,31 @@ with st.sidebar:
         )
 
 if st.session_state.gen_run or st.session_state.imp_run:
-
     if st.session_state.imp_run:
         promptVisible = f"Improving the SEO of the following blog: {title}"
-        promptInVisible = f"""
-        Improve SEO of the blog: "{blog}".
-        """
+        first = f"Write a {depth} blog improving the SEO of: {blog}, using latest upto date information"
+        code = f"citing some coding examples of {language} as code snippets."
+
+        if language:
+            promptInVisible = f"""
+            {first}, {code}
+            """
+        else:
+            promptInVisible = first
     else:
         promptVisible = f"Writing a blog on the following topic: {title}"
-        promptInVisible = f"""
-        Write a {depth} blog on {title} citing some coding examples of {language} as code snippets.
-        """
+        first = f"Write a {depth} blog on {title}"
+        code = f"citing some coding examples of {language} as code snippets."
+        if language:
+            promptInVisible = f"""
+            {first}, {code}
+            """
+        else:
+            promptInVisible = first
 
-    st.session_state.messages.append(
-        {"role": "user", "content": promptVisible})
+    print(promptInVisible)
+
+    st.session_state.messages.append({"role": "user", "content": promptVisible})
 
     with st.chat_message("user", avatar="🧑‍💻"):
         st.markdown(promptVisible)
@@ -196,16 +200,13 @@ if st.session_state.gen_run or st.session_state.imp_run:
     with st.spinner("Generating response..."):
 
         if st.session_state.imp_run:
-            st.session_state.result = generate_response(
-                selection, promptInVisible
-            )
+            # st.session_state.result = generate_response(selection, promptInVisible)
             st.session_state.imp_run = False
 
         if st.session_state.gen_run:
-            st.session_state.result = generate_response(
-                selection, promptInVisible
-            )
+            # st.session_state.result = generate_response(selection, promptInVisible)
             st.session_state.gen_run = False
+        st.session_state.result = 'result'
 
         if st.session_state.result is not None:
             c3, c4, c5 = st.columns(3)
