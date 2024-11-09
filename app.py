@@ -1,10 +1,8 @@
 import warnings, json, string
 
 warnings.filterwarnings("ignore")
-from modules.Extract_Content import get_most_common_keywords
 import streamlit as st
 from modules.Generate_Response import generate_response
-from googlesearch import search
 
 from wordpress_xmlrpc import WordPressPost, Client
 from wordpress_xmlrpc.methods import posts
@@ -71,7 +69,6 @@ def wordpress(action):
 
     client = Client(wp_url, wp_username, wp_password)
 
-    # clean_title = title.replace(":", "-")
     tags, categories = get_tags_categories(title)
 
     post = WordPressPost()
@@ -90,6 +87,7 @@ def wordpress(action):
     except:
         wordpress()
     clear()
+
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -129,7 +127,6 @@ with st.sidebar:
         or st.session_state.imp_run
         or st.session_state.result is not None
         or title == ""
-        # or blog == ""
     )
 
     c1, c2 = st.columns(2)
@@ -162,7 +159,7 @@ if st.session_state.gen_run or st.session_state.imp_run:
     else:
         promptVisible = f"Writing a blog on the following topic: {title}"
         promptInVisible = f"""
-        Write a blog on {title} in the format: {format}
+        Write a in-depth blog on {title} citing some coding examples of R or Python in the format: {format}
         """
 
     st.session_state.messages.append({"role": "user", "content": promptVisible})
@@ -171,22 +168,16 @@ if st.session_state.gen_run or st.session_state.imp_run:
         st.markdown(promptVisible)
 
     with st.spinner("Generating response..."):
-        urls = []
-        for j in search(title, tld="co.in", num=5, stop=5, pause=2):
-            urls.append(j)
-        keywords = get_most_common_keywords(urls)
-
-        # print(promptInVisible + str(keywords))
 
         if st.session_state.imp_run:
             st.session_state.result = generate_response(
-                selection, promptInVisible + str(keywords)
+                selection, promptInVisible
             )
             st.session_state.imp_run = False
 
         if st.session_state.gen_run:
             st.session_state.result = generate_response(
-                selection, promptInVisible + str(keywords)
+                selection, promptInVisible
             )
             st.session_state.gen_run = False
 
@@ -204,5 +195,8 @@ if st.session_state.gen_run or st.session_state.imp_run:
                 )
             with c5:
                 st.button(
-                    "Publish to WordPress", on_click=wordpress, args=("publish",), use_container_width=True
+                    "Publish to WordPress",
+                    on_click=wordpress,
+                    args=("publish",),
+                    use_container_width=True,
                 )
