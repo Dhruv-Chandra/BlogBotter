@@ -19,14 +19,14 @@ def generate_response(selection, promptInVisible, to_add_in_chat = True):
         with st.chat_message("assistant", avatar="🤖"):
             st.markdown(llm_response)
 
-    st.session_state.messages.append({"role": "assistant", "content": llm_response})
+        st.session_state.messages.append({"role": "assistant", "content": llm_response})
 
-    last_response = st.session_state.messages[len(st.session_state.messages) - 1][
-        "content"
-    ]
+        last_response = st.session_state.messages[len(st.session_state.messages) - 1][
+            "content"
+        ]
 
-    if str(last_response) != str(llm_response):
-        with st.chat_message("assistant", avatar="🤖"):
-            st.markdown(llm_response)
+        if str(last_response) != str(llm_response):
+            with st.chat_message("assistant", avatar="🤖"):
+                st.markdown(llm_response)
 
     return llm_response
