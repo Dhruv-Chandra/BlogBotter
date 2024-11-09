@@ -6,7 +6,7 @@ from wordpress_xmlrpc import WordPressPost, Client
 from modules.Generate_Response import generate_response
 import streamlit as st
 import warnings
-import json, os, string
+import string
 
 warnings.filterwarnings("ignore")
 
@@ -68,9 +68,8 @@ def get_tags_categories(title):
 
 def wordpress(action):
     prompt = f"""
-    reformat this blog: {st.session_state.result} make headings bold, list items between relevant list tags, if
-    code instances exist then add them between <code> tags with the code properly formatted and also allowing the user to copy the code using a 
-    button in the top right also choose other tags appropriately.
+    reformat this blog: {st.session_state.result} add all the headings inside "strong" tag, list items between relevant list tags, if
+    code instances exist then add them between "code" tags with the code properly formatted.
     """
 
     result_to_wordpress = generate_response(selection, promptInVisible=prompt)
@@ -189,8 +188,6 @@ if st.session_state.gen_run or st.session_state.imp_run:
             """
         else:
             promptInVisible = first
-
-    print(promptInVisible)
 
     st.session_state.messages.append({"role": "user", "content": promptVisible})
 
