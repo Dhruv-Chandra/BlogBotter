@@ -19,7 +19,9 @@ with open("css/style.css") as f:
 st.title("BlogBotter 💬 ")
 
 # config_data = json.load(open("config.json"))
+# config_data = toml.load('.streamlit/secrets.toml')
 config_data = st.secrets
+print(config_data)
 models = config_data["models"]
 keywords = []
 
