@@ -18,7 +18,8 @@ with open("css/style.css") as f:
 
 st.title("BlogBotter 💬 ")
 
-config_data = json.load(open("config.json"))
+# config_data = json.load(open("config.json"))
+config_data = st.secrets
 models = config_data["models"]
 keywords = []
 
