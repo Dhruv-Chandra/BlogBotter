@@ -205,7 +205,7 @@ if st.session_state.gen_run or st.session_state.imp_run:
             st.session_state.gen_run = False
 
         if st.session_state.result is not None:
-            c3, c4, c5 = st.columns(3)
+            c3, c4, c5, c6 = st.columns(4)
             with c3:
                 st.button("Clear", on_click=clear, use_container_width=True)
 
