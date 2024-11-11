@@ -111,17 +111,17 @@ def wordpress(action):
     post.title = re.findall(title_pattern, result_to_wordpress)[0]
     clean_title = post.title.replace(":", "-")
 
+    post.content = result_to_wordpress
+
     content_pattern = r"</head>(.*?)</html>"
     match = re.search(content_pattern, result_to_wordpress, re.DOTALL)
 
     if match:
         body = match.group(1)
-        print("\n\nBD", body)
         try:
             post.content = remove_h1_from_body(body)
-            print("\n\nPC",post.content)
         except:
-            pass
+            post.content = body
 
     with open(f"{base}/{today}/{clean_title}.html", "w") as f:
         f.write(result_to_wordpress)
