@@ -6,12 +6,22 @@ from wordpress_xmlrpc import WordPressPost, Client
 from modules.Generate_Response import generate_response
 import streamlit as st
 import warnings
-import string
-
-warnings.filterwarnings("ignore")
+import datetime
+import string, re, os
+from bs4 import BeautifulSoup
 
 nltk.download("stopwords")
 nltk.download("wordnet")
+warnings.filterwarnings("ignore")
+
+
+def check_or_create_folder(x):
+    folder = f"./{x}"
+    if os.path.isdir(folder):
+        pass
+    else:
+        os.mkdir(folder)
+
 
 lemmatizer = WordNetLemmatizer()
 
@@ -25,6 +35,13 @@ st.title("BlogBotter 💬 ")
 config_data = st.secrets
 models = config_data["models"]
 keywords = []
+
+
+def remove_h1_from_body(html_string):
+    soup = BeautifulSoup(html_string, "html.parser")
+    for h1_tag in soup.body.find_all("h1"):
+        h1_tag.decompose()
+    return str(soup)
 
 
 def imp_run():
@@ -67,12 +84,18 @@ def get_tags_categories(title):
 
 
 def wordpress(action):
-    prompt = f"""
-    reformat this blog: {st.session_state.result} add all the headings inside "strong" tag, list items between relevant list tags, if
-    code instances exist then add them between "code" tags with the code properly formatted.
-    """
+    base = "blogs"
+    check_or_create_folder(base)
 
-    result_to_wordpress = generate_response(selection, promptInVisible=prompt, to_add_in_chat=False)
+    today = datetime.date.today().strftime("%d-%m-%Y")
+    check_or_create_folder(f'{base}/{today}')
+
+    prompt = f"""
+    convert the output to html file: {st.session_state.result}"""
+
+    result_to_wordpress = generate_response(
+        selection, promptInVisible=prompt, to_add_in_chat=False
+    )
 
     wp_url = config_data["wordpress"]["wordpress_url"]
     wp_username = config_data["wordpress"]["wordpress_username"]
@@ -83,7 +106,25 @@ def wordpress(action):
     tags, categories = get_tags_categories(title)
 
     post = WordPressPost()
-    post.title, post.content = result_to_wordpress.split("\n\n", 1)
+
+    title_pattern = r"<title>(.+?)</title>"
+    post.title = re.findall(title_pattern, result_to_wordpress)[0]
+    clean_title = post.title.replace(":", "-")
+
+    content_pattern = r"</head>(.*?)</html>"
+    match = re.search(content_pattern, result_to_wordpress, re.DOTALL)
+
+    if match:
+        body = match.group(1)
+        print("\n\nBD", body)
+        try:
+            post.content = remove_h1_from_body(body)
+            print("\n\nPC",post.content)
+        except:
+            pass
+
+    with open(f"{base}/{today}/{clean_title}.html", "w") as f:
+        f.write(result_to_wordpress)
 
     post.id = client.call(posts.NewPost(post))
 
@@ -96,7 +137,7 @@ def wordpress(action):
     try:
         client.call(posts.EditPost(post.id, post))
     except:
-        wordpress()
+        wordpress(action)
     clear()
 
 
@@ -119,8 +160,11 @@ with st.sidebar:
     )
 
     title = st.text_input(
-        "Enter Title: ", placeholder="Title of the Blog goes here.", on_change=clear
+        "Enter Topic on which you want the blog written: ",
+        placeholder="Topic of the Blog goes here.",
+        on_change=clear,
     )
+    title = title.title()
 
     c6, c7 = st.columns(2)
     language = None
@@ -132,7 +176,7 @@ with st.sidebar:
         depth = st.selectbox("Depth?", ["General", "In-Depth"])
 
     blog = st.text_area(
-        "Enter Blog: ", placeholder="Your Original Blog goes here.", on_change=clear
+        f"Enter your Blog to improve it with: {selection}", placeholder="Your Original Blog goes here.", on_change=clear
     )
 
     imp_lock = (
@@ -169,7 +213,7 @@ with st.sidebar:
 if st.session_state.gen_run or st.session_state.imp_run:
     if st.session_state.imp_run:
         promptVisible = f"Improving the SEO of the following blog: {title}"
-        first = f"Write a {depth} blog improving the SEO of: {blog}, using latest upto date information"
+        first = f"Write a {depth} blog improving the SEO of: {blog}, using latest up-to date information"
         code = f"citing some coding examples of {language} as code snippets."
 
         if language:
@@ -180,7 +224,7 @@ if st.session_state.gen_run or st.session_state.imp_run:
             promptInVisible = first
     else:
         promptVisible = f"Writing a blog on the following topic: {title}"
-        first = f"Write a {depth} blog on {title}"
+        first = f"Write a {depth} blog titled {title}"
         code = f"citing some coding examples of {language} as code snippets."
         if language:
             promptInVisible = f"""
@@ -204,8 +248,10 @@ if st.session_state.gen_run or st.session_state.imp_run:
             st.session_state.result = generate_response(selection, promptInVisible)
             st.session_state.gen_run = False
 
+        # title, content = st.session_state.result.split()
+
         if st.session_state.result is not None:
-            c3, c4, c5, c6 = st.columns(4)
+            c3, c4, c5 = st.columns(3)
             with c3:
                 st.button("Clear", on_click=clear, use_container_width=True)
 

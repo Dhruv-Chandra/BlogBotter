@@ -1,5 +1,4 @@
 from modules.Rewrite_Content import rewrite_content
-import json
 import streamlit as st
 
 # from numba import jit
@@ -17,6 +16,7 @@ def generate_response(selection, promptInVisible, to_add_in_chat = True):
 
     if to_add_in_chat:
         with st.chat_message("assistant", avatar="🤖"):
+            # st.markdown(stream_parser(llm_response))
             st.markdown(llm_response)
 
         st.session_state.messages.append({"role": "assistant", "content": llm_response})
