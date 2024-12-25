@@ -29,7 +29,7 @@ def proceed():
 
     # user = get_user(username)
     models = user["Models"]["Model"]
-    print(models)
+    # print(models)
 
     if "gen_run" not in st.session_state:
         st.session_state.gen_run = False
@@ -131,7 +131,7 @@ def proceed():
                 """
             else:
                 promptInVisible = first
-        print(promptInVisible)
+        # print(promptInVisible)
 
         st.session_state.messages.append({"role": "user", "content": promptVisible})
 
