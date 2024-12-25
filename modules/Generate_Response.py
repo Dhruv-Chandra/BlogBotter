@@ -5,11 +5,11 @@ import streamlit as st
 # @jit
 
 # @st.cache_data
-def generate_response(selection, promptInVisible, to_add_in_chat = True):
-    config_data = st.secrets
+def generate_response(promptInVisible, to_add_in_chat = True):
+    user = st.session_state.user
 
-    if config_data["models"][selection]["api"] != "":
-        llm_response = rewrite_content(selection, promptInVisible)
+    if user["Models"]["API"] != "":
+        llm_response = rewrite_content(promptInVisible)
     else:
         with st.chat_message("assistant", avatar="🤖"):
             st.markdown("Choose a different Model.")

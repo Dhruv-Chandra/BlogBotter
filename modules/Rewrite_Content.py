@@ -4,15 +4,14 @@ import streamlit as st
 from openai import OpenAI
 
 # @st.cache_data
-def rewrite_content(selection, prompt):
+def rewrite_content(prompt):
+    user = st.session_state.user
 
-    # config_data = json.load(open("config.json"))
-    config_data = st.secrets
+    model = user["Models"]["Model"]
+    api = user["Models"]["API"]
+    # print(model, api)
 
-    model = config_data["models"][selection]["model_name"]
-    api = config_data["models"][selection]["api"]
-
-    if (selection.lower() == "gpt-4") or (selection.lower() == "llama"):
+    if (model == "gpt-4") or (model == "llama"):
         return rewrite_content_gpt(model, api, prompt)
     # elif selection.lower() == "gemini":
     #     return rewrite_content_gemini(model, api, prompt)
@@ -30,20 +29,20 @@ def rewrite_content(selection, prompt):
 # @st.cache_data
 def rewrite_content_gpt(model, api, prompt):
 
-    if api.startswith("nvapi"):
-        baseurl = "https://integrate.api.nvidia.com/v1"
-        client = OpenAI(api_key=api, base_url=baseurl)
-    else:
-        # baseurl = ''
-        client = OpenAI(
-            api_key=api,
-            # base_url=baseurl
-        )
+    # if api.startswith("nvapi"):
+    #     baseurl = "https://integrate.api.nvidia.com/v1"
+    #     client = OpenAI(api_key=api, base_url=baseurl)
+    # else:
+    #     # baseurl = ''
+    #     client = OpenAI(
+    #         api_key=api,
+    #         # base_url=baseurl
+    #     )
 
-    # client = OpenAI(
-    #     api_key = api,
-    #     base_url=baseurl
-    # )
+    client = OpenAI(
+        api_key = api,
+        # base_url=baseurl
+    )
 
     response = client.chat.completions.create(
         model=model,
