@@ -3,3 +3,4 @@ nltk
 openai
 bs4
 streamlit_login_auth_ui
+trycourier
