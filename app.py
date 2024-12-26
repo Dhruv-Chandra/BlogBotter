@@ -11,8 +11,8 @@ from openai import OpenAI, OpenAIError
 st.set_page_config(page_title="BlogBotter 💬 ", initial_sidebar_state="auto")
 st.title("BlogBotter 💬 ")
 
-# nltk.download("stopwords")
-# nltk.download("wordnet")
+nltk.download("stopwords")
+nltk.download("wordnet")
 warnings.filterwarnings("ignore")
 
 if "user" not in st.session_state:

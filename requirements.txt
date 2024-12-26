@@ -4,3 +4,4 @@ openai
 bs4
 streamlit_login_auth_ui
 trycourier
+argon2-cffi
