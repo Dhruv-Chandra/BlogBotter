@@ -1,7 +1,13 @@
+streamlit
 python-wordpress-xmlrpc
 nltk
-openai
 bs4
-streamlit_login_auth_ui
-trycourier
-argon2-cffi
+python-dotenv
+transformers
+google-genai
+torch
+torchvision
+torchaudio
+bitsandbytes==0.46.1
+peft
+azure-storage-blob

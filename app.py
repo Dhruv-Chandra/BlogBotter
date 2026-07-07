@@ -1,123 +1,153 @@
-import nltk
-from modules.Check_API import check_openai_api_key
-from modules.Main import proceed, get_user
-from modules.Update_User_Details import update_details
 import streamlit as st
-import warnings
-from modules.Login_UI import login_ui
-import openai
-from openai import OpenAI, OpenAIError
+import warnings, json
+from modules.Generate_Response import generate_response
+from modules.WordPress import wordpress, clear
 
 st.set_page_config(page_title="BlogBotter 💬 ", initial_sidebar_state="auto")
 st.title("BlogBotter 💬 ")
 
-# nltk.download("stopwords")
-# nltk.download("wordnet")
 warnings.filterwarnings("ignore")
 
-if "user" not in st.session_state:
-    st.session_state.user = ""
+
+def imp_run():
+    st.session_state.imp_run = True
 
 
-def check(model, api):
-    try:
-        val = model == "GPT4" and check_openai_api_key(api)
-        if val:
-            st.session_state.proceed_disabled = False
-        else:
-            st.session_state.proceed_disabled = True
-            st.session_state.verify_disabled = True
-    except OpenAIError as e:
-        st.session_state.proceed_disabled = True
-        st.session_state.verify_disabled = True
-        # print(e)
+def gen_run():
+    st.session_state.gen_run = True
 
 
-def refresh():
-    st.session_state.verify_disabled = False
-    st.session_state.proceed_disabled = not (
-        wordpress_url == ""
-        or wordpress_pass == ""
-        or wordpress_user == ""
-        or check(select_model, api)
+with open("css/style.css") as f:
+    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+if "gen_run" not in st.session_state:
+    st.session_state.gen_run = False
+    st.session_state.result = None
+if "imp_run" not in st.session_state:
+    st.session_state.imp_run = False
+    st.session_state.result = None
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+for message in st.session_state.messages:
+    if message["role"] == "user":
+        with st.chat_message(message["role"], avatar="🧑‍💻"):
+            st.markdown(message["content"])
+    else:
+        with st.chat_message(message["role"], avatar="🤖"):
+            st.markdown(message["content"])
+
+with st.sidebar:
+    st.markdown("# Chat Options")
+    word_press_col_1, word_press_col_2 = st.columns(2)
+
+    title = st.text_input(
+        "Enter Topic on which you want the blog written: ",
+        placeholder="Topic of the Blog goes here.",
+        on_change=clear,
+    )
+    title = title.title()
+
+    c6, c7 = st.columns(2)
+
+    with c6:
+        language = st.selectbox("Language for Code examples?", ["Python", "R"])
+
+    with c7:
+        depth = st.selectbox("Depth?", ["General", "In-Depth"])
+
+    blog = st.text_area(
+        f"Enter your Blog to improve:",
+        placeholder="Your Original Blog goes here.",
+        on_change=clear,
     )
 
+    imp_lock = (
+        st.session_state.imp_run
+        or st.session_state.gen_run
+        or st.session_state.result is not None
+        or title == ""
+        or blog == ""
+    )
+    gen_lock = (
+        st.session_state.gen_run
+        or st.session_state.imp_run
+        or st.session_state.result is not None
+        or title == ""
+    )
 
-LOGGED_IN = login_ui()
+    c1, c2 = st.columns(2)
 
-if LOGGED_IN[0]:
-    username = LOGGED_IN[1]
-    st.session_state.user = get_user(username)
-
-    try:
-        first_login = st.session_state.user["First_Login"]
-    except:
-        first_login = True
-
-    if first_login:
-        # invalid_api = True
-
-        # if "verify_disabled" not in st.session_state:
-        #     st.session_state.verify_disabled = True
-        # if "proceed_disabled" not in st.session_state:
-        #     st.session_state.proceed_disabled = True
-
-        wordpress_user = st.text_input(
-            "WordPress Username:",
-            placeholder="Type your WordPress Username...",
+    with c1:
+        st.button(
+            "Generate a Fresh Blog",
+            on_click=gen_run,
+            disabled=gen_lock,
+            use_container_width=True,
         )
-        wordpress_pass = st.text_input(
-            "WordPress Passoword:",
-            placeholder="Type your WordPress Password...",
-        )
-        wordpress_url = st.text_input(
-            "WordPress URL:",
-            placeholder="Type your WordPress Site Link...",
+    with c2:
+        st.button(
+            "Improve the Above Blog",
+            on_click=imp_run,
+            disabled=imp_lock,
+            use_container_width=True,
         )
 
-        select_model = st.selectbox("Please select your model:", ["gpt-4", "Gemini"])
-        api = st.text_input(
-            "Please enter your API key",
-            placeholder="API",
-            # on_change=refresh
-        )
-
-        new_dt = [{
-            "Wordpress": {
-                "WP_USER": wordpress_user,
-                "WP_URL": wordpress_url,
-                "WP_PASS": wordpress_pass,
-            },
-            "Models": {"Model_Name": select_model, "Model": select_model, "API": api},
-        }]
-
-        # new_dt = [{
-        #     "WP_USER": wordpress_user,
-        #     "WP_URL": wordpress_url,
-        #     "WP_PASS": wordpress_pass,
-        #     "Model_Name": select_model,
-        #     "Model": select_model,
-        #     "API": api,
-        # }]
-        # print(new_dt[0])
-
-        c1, c2 = st.columns(2)
-        with c1:
-            st.button(
-                "Verify",
-                # on_click=check,
-                args=(select_model, api),
-                use_container_width=True,
-                # disabled=st.session_state.verify_disabled,
-            )
-
-        with c2:
-            st.button(
-                "Proceed",
-                on_click=update_details,
-                args=(new_dt),
-                # disabled=st.session_state.proceed_disabled,
-                use_container_width=True,
-            )
+if st.session_state.gen_run or st.session_state.imp_run:
+    if st.session_state.imp_run:
+        promptVisible = f"Improving the SEO of the following blog: {title}"
+        first = f"Write a {depth} blog improving the SEO of: {blog}, using latest up-to date information"
+        code = f"citing some coding examples of {language} as code snippets."
+        promptInVisible = f"{first}, {code}"
     else:
-        proceed()
+        promptVisible = f"Writing a blog on the following topic: {title}"
+        first = f"Write a {depth} blog titled '{title}'"
+        code = f"citing some coding examples of {language} as code snippets."
+        promptInVisible = f"{first}, {code}"
+
+    st.session_state.messages.append({"role": "user", "content": promptVisible})
+
+    with st.chat_message("user", avatar="🧑‍💻"):
+        st.markdown(promptVisible)
+
+    with st.spinner("Generating response..."):
+
+        if st.session_state.imp_run:
+            st.session_state.result = generate_response(
+                promptInVisible, title=title
+            )
+            st.session_state.imp_run = False
+
+        if st.session_state.gen_run:
+            st.session_state.result = generate_response(
+                promptInVisible, title=title
+            )
+            st.session_state.gen_run = False
+
+        if st.session_state.result is not None:
+            # Display the generated blog content
+            with st.chat_message("assistant", avatar="🤖"):
+                st.markdown(st.session_state.result)
+            st.session_state.messages.append(
+                {"role": "assistant", "content": st.session_state.result}
+            )
+
+            c3, c4, c5 = st.columns(3)
+            with c3:
+                st.button("Clear", on_click=clear, use_container_width=True)
+
+            with c4:
+                st.button(
+                    "Add Draft to WordPress",
+                    on_click=wordpress,
+                    args=("draft",),
+                    use_container_width=True,
+                )
+            with c5:
+                st.button(
+                    "Publish to WordPress",
+                    on_click=wordpress,
+                    args=("publish",),
+                    use_container_width=True,
+                )
